@@ -1,12 +1,10 @@
-var clamp = function (x, min, max) {
-  return x < min ? min : (x > max ? max : x);
-}
-
-var manager = new Manager('localhost', 9000, 'shotting');
-
-setTimeout(function () {
-  manager.join('prueba');
-}, 2000);
+var manager = new Manager({
+  host: 'localhost',
+  port: 9000,
+  open: function () {
+    manager.join('test');
+  }  
+});
 
 var Q = Quintus()
   .include("Sprites, Anim, Input, Touch, Scenes, UI")
@@ -57,7 +55,7 @@ Q.Sprite.extend("Player", {
       this.p.y += this.p.speed;
     }
 
-    this.p.y = clamp(this.p.y, 0 + (this.p.h / 2), Q.el.height - (this.p.h / 2));
+    this.p.y = Util.clamp(this.p.y, 0 + (this.p.h / 2), Q.el.height - (this.p.h / 2));
     this.stage.collide(this, { collisionMask: Q.SPRITE_ENEMY });
   }
 });

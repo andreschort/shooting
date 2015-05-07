@@ -1,21 +1,18 @@
 // Responsible for controlling the connection to the peer server and receive new players
-function Manager(host, port, path) {
-  this.host = host;
-  this.port = port;
-  this.path = path;
-
+function Manager(options) {
   this.peer = new Peer({
-    host: this.host,
-    port: this.port,
-    path: this.path
+    host: options.host,
+    port: options.port,
+    path: 'shotting'
   });
 
   this.players = {};
-
+  
   var handle = {
     open: function (id) {
       // we are now connected to the peer server
       console.log("local id: " + id);
+      Util.callIfPossible(options.open);
     },
     connection: function (conn) {
       // incoming connection from another peer
@@ -60,6 +57,7 @@ Manager.prototype.connect = function (id) {
   return this.players[id];
 }
 
+// broadcasts a message to all players
 Manager.prototype.broadcast = function (data) {
   var self = this;
   Object.keys(this.players).forEach(function (peerId) {
