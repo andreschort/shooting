@@ -1,6 +1,13 @@
 var clamp = function (x, min, max) {
   return x < min ? min : (x > max ? max : x);
 }
+
+var manager = new Manager('localhost', 9000, 'shotting');
+
+setTimeout(function () {
+  manager.join('prueba');
+}, 2000);
+
 var Q = Quintus()
   .include("Sprites, Anim, Input, Touch, Scenes, UI")
   .setup({ width: 800, height: 480 })
