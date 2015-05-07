@@ -35,7 +35,7 @@ Q.Sprite.extend("Player", {
     this.add("Gun");
     this.play("default");
     this.on('hit', function (col) {
-      if (col.obj.isA("Shot") && ((col.obj.p.type & Q.SPRITE_ENEMY) == Q.SPRITE_ENEMY)) {
+      if (col.obj.isA("Shot") && ((col.obj.p.type & Q.SPRITE_ENEMY) == Q.SPRITE_ENEMY) && !Q.endGame) {
         this.destroy();
         col.obj.destroy();
         Q.stageScene("endGame", 1, { label: "You Died!" });
@@ -72,7 +72,7 @@ Q.Sprite.extend("Alien", {
     this.add("BasicAI");
     this.on('hit', function (col) {
       console.log(col.obj.isA("Shot"));
-      if (col.obj.isA("Shot") && (col.obj.p.type & Q.SPRITE_FRIENDLY) == Q.SPRITE_FRIENDLY) {
+      if (col.obj.isA("Shot") && (col.obj.p.type & Q.SPRITE_FRIENDLY) == Q.SPRITE_FRIENDLY && !Q.endGame) {
         this.destroy();
         col.obj.destroy();
         Q.stageScene("endGame", 1, { label: "You Won!" });
@@ -177,14 +177,21 @@ Q.component("Gun", {
         return;
       }
 
-      var shot;
-      if (type == Q.SPRITE_FRIENDLY) {
-        shot = Q.stage().insert(new Q.Shot({ x: this.p.x + 50, y: this.p.y, speed: 200, type: Q.SPRITE_DEFAULT | Q.SPRITE_FRIENDLY }));
-      } else {
-        shot = Q.stage().insert(new Q.Shot({ x: this.p.x - 50, y: this.p.y, speed: -200, type: Q.SPRITE_DEFAULT | Q.SPRITE_ENEMY }));
+      var props = {
+        x: this.p.x + 50,
+        y: this.p.y,
+        speed: 200,
+        type: Q.SPRITE_DEFAULT | Q.SPRITE_FRIENDLY
+      };
+
+      if (type == Q.SPRITE_ENEMY) {
+        props.x -= 100;
+        props.speed = -props.speed;
+        props.type = Q.SPRITE_DEFAULT | Q.SPRITE_ENEMY;
+        props.angle = 180;
       }
-      
-      this.p.shots.push(shot);
+
+      this.p.shots.push(Q.stage().insert(new Q.Shot(props)));
 
       // fire throttling
       this.p.canFire = false;
@@ -198,7 +205,7 @@ Q.component("Gun", {
 
 Q.scene("mainLevel", function (stage) {
   Q.gravity = 0;
-
+  Q.endGame = false;
   stage.insert(new Q.Sprite({
       asset: "space_background.jpg",
       x: Q.el.width / 2,
@@ -211,6 +218,7 @@ Q.scene("mainLevel", function (stage) {
 });
 
 Q.scene("endGame", function (stage) {
+  Q.endGame = true;
   var container = stage.insert(new Q.UI.Container({
     x: Q.width / 2,
     y: Q.height / 2,
