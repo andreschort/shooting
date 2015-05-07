@@ -6,19 +6,28 @@ function Manager(options) {
     path: 'shotting'
   });
 
+  this.events = {};
   this.players = {};
-  
+  var self = this;
+
   var handle = {
     open: function (id) {
       // we are now connected to the peer server
       console.log("local id: " + id);
-      Util.callIfPossible(options.open);
+      Util.callIfPossible(options.open, this);
     },
     connection: function (conn) {
       // incoming connection from another peer
       // create player, get his name, etc
       console.log('new player:' + conn.peer);
-      this.players[conn.peer] = new Player(conn);
+      var newPlayer = new Player(conn)
+      this.players[conn.peer] = newPlayer;
+
+      if (this.events['newplayer'] && this.events['newplayer'].length > 0) {
+        this.events['newplayer'].forEach(function (cb) {
+          Util.callIfPossible(cb, self, newPlayer);
+       });
+      }
     },
     close: function () {
       // peer was disconnected and destroyed
@@ -49,20 +58,29 @@ Manager.prototype.join = function (game) {
       self.connect(peer.id);
     });
   });
-}
+};
 
 // start a connection to a remote peer
 Manager.prototype.connect = function (id) {
   this.players[id] = new Player(this.peer.connect(id));
   return this.players[id];
-}
+};
 
 // broadcasts a message to all players
-Manager.prototype.broadcast = function (data) {
+Manager.prototype.broadcast = function (message) {
+  var data = { id: this.peer.id, msg: message };
   var self = this;
   Object.keys(this.players).forEach(function (peerId) {
     self.players[peerId].send(data);
   });
+};
+
+Manager.prototype.on = function (evnt, cb) {
+  if (!this.events[evnt]) {
+    this.events[evnt] = [];
+  }
+
+  this.events[evnt].push(cb);
 }
 
 // Represents a remote player, handles incoming messages from that player
@@ -95,7 +113,10 @@ function Player(conn) {
 
 // send data to this remote player 
 Player.prototype.send = function (data) {
-  this.conn.send(data);
+  if (this.conn.open) {
+    this.conn.send(data);
+  }
+  // discard early messages is not a problem, I think
 };
 
 Player.prototype.close = function () {

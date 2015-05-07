@@ -3,6 +3,8 @@ var manager = new Manager({
   port: 9000,
   open: function () {
     manager.join('test');
+    manager.on('newplayer', function (player) {
+     console.log(player); });
   }  
 });
 
@@ -57,6 +59,8 @@ Q.Sprite.extend("Player", {
 
     this.p.y = Util.clamp(this.p.y, 0 + (this.p.h / 2), Q.el.height - (this.p.h / 2));
     this.stage.collide(this, { collisionMask: Q.SPRITE_ENEMY });
+
+    //manager.broadcast({x: this.p.x, y: this.p.y });
   }
 });
 
