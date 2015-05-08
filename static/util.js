@@ -26,6 +26,20 @@
       });
 
       return result;
+    },
+    call2: function (fn, thisArg) {
+      var arr = fn;
+
+      if (!Array.isArray(fn)) {
+        arr = [fn];
+      }
+
+      var args = [].splice.call(arguments, 2);
+      arr.forEach(function (fn) {
+        if (isFunction(fn)) {
+          return fn.apply(thisArg, args);
+        }
+      });
     }
   };
 })();

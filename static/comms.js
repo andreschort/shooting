@@ -1,33 +1,40 @@
 // Responsible for controlling the connection to the peer server and receive new players
 function Manager(options) {
+  this.events = {};
+  this.players = {};
+  this.primary = false;
+  this.ready = false;
+
+  if (options.open) {
+    this.on('open', options.open);
+  }
+
   this.peer = new Peer({
     host: options.host,
     port: options.port,
     path: 'shotting'
   });
 
-  this.events = {};
-  this.players = {};
   var self = this;
-
   var handle = {
     open: function (id) {
       // we are now connected to the peer server
       console.log("local id: " + id);
-      Util.callIfPossible(options.open, this);
+      this.ready = true;
+      Util.call2(self.events['open'], self);
     },
     connection: function (conn) {
       // incoming connection from another peer
-      // create player, get his name, etc
       console.log('new player:' + conn.peer);
       var newPlayer = new Player(conn)
       this.players[conn.peer] = newPlayer;
 
-      if (this.events['newplayer'] && this.events['newplayer'].length > 0) {
+      Util.call2(this.events['newplayer'], this);
+      /*if (this.events['newplayer'] && this.events['newplayer'].length > 0) {
         this.events['newplayer'].forEach(function (cb) {
           Util.callIfPossible(cb, self, newPlayer);
        });
-      }
+      }*/
     },
     close: function () {
       // peer was disconnected and destroyed
@@ -51,12 +58,15 @@ function Manager(options) {
 };
 
 // Tells the server that I want to join a game room
-Manager.prototype.join = function (game) {
+Manager.prototype.join = function (game, cb) {
   var self = this;
   this.api.join(this.peer.id, game).done(function (res) {
+    self.primary = res.primary;
     res.peers.forEach(function (peer) {
       self.connect(peer.id);
     });
+
+    Util.call2(cb, self);
   });
 };
 
@@ -86,11 +96,17 @@ Manager.prototype.on = function (evnt, cb) {
 // Represents a remote player, handles incoming messages from that player
 function Player(conn) {
   this.conn = conn;
+  this.events = {};
 
+  var self = this;
   var handle = {
     data: function (data) {
       // data received;
-      console.log(data);
+      if (this.events['message'] && this.events['message'].length > 0) {
+        this.events['message'].forEach(function (cb) {
+          Util.callIfPossible(cb, self, data);
+       });
+      }     
     },
     open: function () {
       // data connection ready
@@ -122,3 +138,11 @@ Player.prototype.send = function (data) {
 Player.prototype.close = function () {
   this.conn.close();
 };
+
+Player.prototype.on = function (evnt, cb) {
+  if (!this.events[evnt]) {
+    this.events[evnt] = [];
+  }
+
+  this.events[evnt].push(cb);
+}

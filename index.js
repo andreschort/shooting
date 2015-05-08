@@ -34,15 +34,14 @@ router.route('/join').post(function(req, res) {
     var peerName = req.body.peerName;
     var peerId = req.body.peerId;
 
-    console.log(name);
-    console.log(peerId);
-
+    var primary = false;
     if (rooms[name] === undefined) {
         rooms[name] = [];
+        primary = true;
     }
     
-    res.json({ name: name, peers: rooms[name] });
-    console.log(rooms[name]);
+    res.json({ name: name, peers: rooms[name], primary: primary });
+    
     if (peerId && peerId.length > 0 && rooms[name].indexOf(peerId) === -1) {
         rooms[name].push({ id: peerId, name: peerName });
     }
