@@ -3,7 +3,8 @@ function Manager(options) {
   this.events = {};
   this.players = {};
   this.primary = false;
-  this.ready = false;
+  this.open = false;
+  this.playerCount = 0;
 
   if (options.open) {
     this.on('open', options.open);
@@ -20,21 +21,17 @@ function Manager(options) {
     open: function (id) {
       // we are now connected to the peer server
       console.log("local id: " + id);
-      this.ready = true;
-      Util.call2(self.events['open'], self);
+      this.open = true;
+      Util.callIfPossible(self.events['open'], self);
     },
     connection: function (conn) {
       // incoming connection from another peer
       console.log('new player:' + conn.peer);
       var newPlayer = new Player(conn)
       this.players[conn.peer] = newPlayer;
+      this.payerCount++;
 
-      Util.call2(this.events['newplayer'], this);
-      /*if (this.events['newplayer'] && this.events['newplayer'].length > 0) {
-        this.events['newplayer'].forEach(function (cb) {
-          Util.callIfPossible(cb, self, newPlayer);
-       });
-      }*/
+      Util.callIfPossible(this.events['newplayer'], this, newPlayer);
     },
     close: function () {
       // peer was disconnected and destroyed
@@ -63,16 +60,17 @@ Manager.prototype.join = function (game, cb) {
   this.api.join(this.peer.id, game).done(function (res) {
     self.primary = res.primary;
     res.peers.forEach(function (peer) {
-      self.connect(peer.id);
+      self.connect(peer.id).primary = peer.primary;
     });
 
-    Util.call2(cb, self);
+    Util.callIfPossible(cb, self);
   });
 };
 
 // start a connection to a remote peer
 Manager.prototype.connect = function (id) {
   this.players[id] = new Player(this.peer.connect(id));
+  this.playerCount++;
   return this.players[id];
 };
 
@@ -86,6 +84,11 @@ Manager.prototype.broadcast = function (message) {
 };
 
 Manager.prototype.on = function (evnt, cb) {
+  if (evnt == 'open' && this.open) {
+    // fire immediately if already open
+    cb();
+  }
+
   if (!this.events[evnt]) {
     this.events[evnt] = [];
   }
@@ -102,11 +105,7 @@ function Player(conn) {
   var handle = {
     data: function (data) {
       // data received;
-      if (this.events['message'] && this.events['message'].length > 0) {
-        this.events['message'].forEach(function (cb) {
-          Util.callIfPossible(cb, self, data);
-       });
-      }     
+      Util.callIfPossible(this.events["message"], this, data);
     },
     open: function () {
       // data connection ready

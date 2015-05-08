@@ -11,9 +11,8 @@
 
     stage.insert(new Q.Player());
 
-    stage.insert(new Q.Enemy());
-    Game.manager.on('newplayer', function (player) {
-      stage.insert(new Q.Enemy({ player: player }));
-    });
+//    Game.manager.on('newplayer', function (player) {
+      stage.insert(new Q.Enemy({ player: stage.options.enemy }));
+//    });
   }
 })();

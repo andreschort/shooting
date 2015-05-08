@@ -4,8 +4,9 @@
       this._super(p, {
         sprite: "player",
         sheet: "player",
-        x: 60,
+        x: Game.manager.primary ? 60 : Q.el.width - 60,
         y: Q.el.height / 2,
+        angle: Game.manager.primary ? 0 : 180,
         type: Q.SPRITE_FRIENDLY,
         speed: 10
       });
@@ -17,7 +18,7 @@
         if (col.obj.isA("Shot") && ((col.obj.p.type & Q.SPRITE_ENEMY) == Q.SPRITE_ENEMY) && !Q.endGame) {
           this.destroy();
           col.obj.destroy();
-          Q.stageScene("endGame", 1, { label: "You Died!" });
+          Q.stageScene("endGame", 2, { label: "You Died!" });
         }
       });
     },

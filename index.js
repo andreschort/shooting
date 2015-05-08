@@ -43,7 +43,7 @@ router.route('/join').post(function(req, res) {
     res.json({ name: name, peers: rooms[name], primary: primary });
     
     if (peerId && peerId.length > 0 && rooms[name].indexOf(peerId) === -1) {
-        rooms[name].push({ id: peerId, name: peerName });
+        rooms[name].push({ id: peerId, name: peerName, primary: primary });
     }
 });
 
