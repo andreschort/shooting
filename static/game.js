@@ -22,6 +22,7 @@ Q.Sprite.extend("Enemy", Game.sprite["Enemy"]);
 Q.Sprite.extend("Shot", Game.sprite["Shot"]);
 
 Q.component("BasicAI", Game.component["BasicAI"]);
+Q.component("RemoteAI", Game.component["RemoteAI"]);
 Q.component("Gun", Game.component["Gun"]);
 
 Q.scene("intro", Game.scene["intro"]);

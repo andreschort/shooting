@@ -1,22 +1,27 @@
 // SETUP PEER SERVER
+var _ = require('underscore');
 var PeerServer = require('peer').PeerServer;
-var server = new PeerServer({port: 9000, path: '/shotting'});
+var server = new PeerServer({port: 9000, path: '/shooting'});
+var util = require('util');
+var r = require('./rooms.js');
 
-server.on('connection', function(id) { 
-    console.log('connected: ' + id);
+var rooms = new r.RoomCollection();
+
+server.on('connection', function (id) {
+  console.log('connected: ' + id);
+  rooms.updatePeer(id, true);
 });
 
-server.on('disconnect', function(id) { 
-    console.log('disconnected: ' + id);
+server.on('disconnect', function (id) {
+  console.log('disconnected: ' + id);
+  rooms.updatePeer(id, false);
 });
-
 
 // SETUP API
 var express    = require('express');
 var app        = express();
 var bodyParser = require('body-parser');
 var morgan     = require('morgan');
-var _          = require("underscore");
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -27,26 +32,25 @@ var port = process.env.PORT || 8080;
 // =============================================================================
 var router = express.Router();
 
-var rooms = {};
-
 router.route('/join').post(function(req, res) {
-    var name = req.body.name || 'default';
-    var peerName = req.body.peerName;
-    var peerId = req.body.peerId;
+  var name = req.body.name || 'default';
+  var peerName = req.body.peerName;
+  var peerId = req.body.peerId;
+  var room = rooms.get(name);
 
-    var primary = false;
-    if (rooms[name] === undefined) {
-        rooms[name] = [];
-        primary = true;
-    }
-    
-    res.json({ name: name, peers: rooms[name], primary: primary });
-    
-    if (peerId && peerId.length > 0 && rooms[name].indexOf(peerId) === -1) {
-        rooms[name].push({ id: peerId, name: peerName, primary: primary });
-    }
+  if (!room) {
+    room = new r.Room(name);
+    rooms.add(room);
+  }
+
+  res.json({ name: room.name, peers: room.peers, primary: room.primary() == null });
+
+  console.log(util.inspect(room, false, null));
+
+  room.add({ id: peerId, name: peerName, online: true });
 });
 
+/// this is very old and must be reimplemented
 router.route('/name/:roomName?/:peerId?').get(function (req, res) {
     var room = rooms[req.params['roomName']];
     var peerId = req.params['peerId'];
@@ -60,17 +64,17 @@ router.route('/name/:roomName?/:peerId?').get(function (req, res) {
 });
 
 router.route('/leave').post(function(req, res) {
-  var roomName = req.body.roomName;
+  var name = req.body.name || 'default';
   var peerId = req.body.peerId;
 
-  var room = rooms[roomName];
-    
-    if (room) {
-        room = _.reject(room, function (peer) { return peer.id === peerId; });
-        rooms[roomName] = room;
-    }
-    
-    res.end('Bye');
+  var room = rooms.get(name);
+  if (room) {
+    room.remove(peerId);
+  }
+
+  res.end('Bye');
+
+  console.log(util.inspect(room, false, null));
 });
 
 // REGISTER OUR ROUTES -------------------------------

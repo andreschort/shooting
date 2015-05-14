@@ -17,26 +17,21 @@
     var text = container.insert(new Q.UI.Text({
       x: 10,
       y: -10 - button.p.h,
-      label: "Server: " + (Game.manager.open ? "Ready" : "Connecting...")
+      label: "Server: Connecting..."
     }));
 
-    Game.manager.on('open', function () {
-      text.p.label = "Server: Ready\nJoining game...";
-      Game.manager.join('test', function () {
-        if (Game.manager.playerCount > 0) {
-          Q.clearStages();
-
-          Q.stageScene("mainLevel", 1, { enemy: Game.manager.players[Object.keys(Game.manager.players)[0]] });
-        } else {
-          text.p.label = "Server: Ready\nWaiting enemy"
-        }
-      });
+    Game.manager.on.connected.addOnce(function () {
+      Logger.debug('UI: Intro - Manager.onConnected');
+      text.p.label = "Server: Ready\nWaiting enemy";
     });
 
-    Game.manager.on('newplayer', function (player) {
+    Game.manager.on.started.addOnce(function () {
+      Logger.debug('UI: Intro - Manager.onStarted');
       Q.clearStages();
-      Q.stageScene("mainLevel", 1, { enemy: player });
+      Q.stageScene("mainLevel");
     });
+
+    Game.manager.start('test game');
 
     button.on('click', function () {
       Q.clearStages();

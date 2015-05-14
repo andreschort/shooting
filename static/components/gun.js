@@ -5,6 +5,8 @@
       this.entity.p.shots = [];
       this.entity.p.canFire = true;
       this.entity.on('step', "handleFiring");
+
+      var entity = this.entity;
     },
 
     extend: {
@@ -31,17 +33,21 @@
           x: this.p.x + 50,
           y: this.p.y,
           speed: 200,
-          type: Q.SPRITE_DEFAULT | Q.SPRITE_FRIENDLY
+          type: Q.SPRITE_DEFAULT | Q.SPRITE_FRIENDLY,
+          angle: this.p.angle
         };
 
         if (type == Q.SPRITE_ENEMY) {
           props.x -= 100;
-          props.speed = -props.speed;
           props.type = Q.SPRITE_DEFAULT | Q.SPRITE_ENEMY;
-          props.angle = 180;
         }
 
-        this.p.shots.push(Q.stage().insert(new Q.Shot(props)));
+        if (this.p.player && !this.p.player.primary) {
+          props.x -= 100;
+          props.speed = -props.speed;
+        }
+
+        this.p.shots.push(Q.stage(1).insert(new Q.Shot(props)));
 
         // fire throttling
         this.p.canFire = false;

@@ -1,47 +1,56 @@
 // Responsible for controlling the connection to the peer server and receive new players
-function Manager(options) {
-  this.events = {};
+function Comm(options) {
   this.players = {};
-  this.primary = false;
   this.open = false;
-  this.playerCount = 0;
+  this.on = {
+    connected: new signals.Signal(),
+    disconnected: new signals.Signal(),
+    newPlayer: new signals.Signal(),
+    message: new signals.Signal()
+  };
 
-  if (options.open) {
-    this.on('open', options.open);
+  this.on.connected.memorize = true;
+  this.on.disconnected.memorize = true;
+
+  if (options.connected) {
+    Logger.debug('Comm: options.connected hooked');
+    this.on.connected.add(options.connected);
   }
 
   this.peer = new Peer({
     host: options.host,
     port: options.port,
-    path: 'shotting'
+    path: 'shooting'
   });
 
   var self = this;
   var handle = {
     open: function (id) {
       // we are now connected to the peer server
-      console.log("local id: " + id);
-      this.open = true;
-      Util.callIfPossible(self.events['open'], self);
+      Logger.info('Comm: peer open - id:%s', id);
+      self.open = true;
+      self.on.connected.dispatch(id);
     },
     connection: function (conn) {
       // incoming connection from another peer
-      console.log('new player:' + conn.peer);
-      var newPlayer = new Player(conn)
-      this.players[conn.peer] = newPlayer;
-      this.payerCount++;
-
-      Util.callIfPossible(this.events['newplayer'], this, newPlayer);
+      Logger.info('Comm: new connection - id:', conn.peer);
+      self.players[conn.peer] = new Player(conn);
+      self.on.newPlayer.dispatch(self.players[conn.peer]);
+      conn.on('data', function (data) {
+        self.on.message.dispatch(self.players[conn.peer], data);
+      })
     },
     close: function () {
       // peer was disconnected and destroyed
+      Logger.info('Comm: peer closed');
     },
     disconnected: function () {
       // peer was disconnected from the server
+      Logger.info('Comm: peer disconnected');
     },
     error: function (err) {
       // something went wrong
-      console.log(err);
+      Logger.error(err);
     }
   };
 
@@ -50,51 +59,37 @@ function Manager(options) {
   this.peer.on('close', handle.close.bind(this));
   this.peer.on('disconnected', handle.disconnected.bind(this));
   this.peer.on('error', handle.error.bind(this));
-
-  this.api = new Api(window.location.origin + '/api');
-};
-
-// Tells the server that I want to join a game room
-Manager.prototype.join = function (game, cb) {
-  var self = this;
-  this.api.join(this.peer.id, game).done(function (res) {
-    self.primary = res.primary;
-    res.peers.forEach(function (peer) {
-      self.connect(peer.id).primary = peer.primary;
-    });
-
-    Util.callIfPossible(cb, self);
-  });
 };
 
 // start a connection to a remote peer
-Manager.prototype.connect = function (id) {
+Comm.prototype.connect = function (id) {
+  Logger.debug('Comm: connect %s', id);
   this.players[id] = new Player(this.peer.connect(id));
-  this.playerCount++;
   return this.players[id];
 };
 
 // broadcasts a message to all players
-Manager.prototype.broadcast = function (message) {
-  var data = { id: this.peer.id, msg: message };
+Comm.prototype.broadcast = function (data) {
+  Logger.debug('Comm: broadcast');
   var self = this;
   Object.keys(this.players).forEach(function (peerId) {
     self.players[peerId].send(data);
   });
 };
 
-Manager.prototype.on = function (evnt, cb) {
-  if (evnt == 'open' && this.open) {
-    // fire immediately if already open
-    cb();
-  }
+Comm.prototype.playerCount = function () {
+  var length = Object.keys(this.players).length;
+  Logger.debug('Comm: playerCount = %s', length);
 
-  if (!this.events[evnt]) {
-    this.events[evnt] = [];
-  }
+  return length;
+};
 
-  this.events[evnt].push(cb);
-}
+Comm.prototype.destroy = function () {
+  Logger.debug('Comm: destroy');
+  if (this.peer) {
+    this.peer.destroy();
+  }
+};
 
 // Represents a remote player, handles incoming messages from that player
 function Player(conn) {
@@ -105,7 +100,11 @@ function Player(conn) {
   var handle = {
     data: function (data) {
       // data received;
-      Util.callIfPossible(this.events["message"], this, data);
+      Util.callIfPossible(self.events["message"], this, data);
+
+      if (data.type) {
+        Util.callIfPossible(self.events["message." + data.type], this, data);
+      }
     },
     open: function () {
       // data connection ready
@@ -144,4 +143,4 @@ Player.prototype.on = function (evnt, cb) {
   }
 
   this.events[evnt].push(cb);
-}
+};

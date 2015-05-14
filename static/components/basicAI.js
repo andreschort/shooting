@@ -23,7 +23,7 @@
         }
         
         // go the other way if we are at the limit of the screen.
-        if (this.p.y > Q.el.height - this.p.h / 2 || this.p.y < 0 + this.p.w /2) {
+        if (this.p.y > Q.el.height - this.p.h / 2 || this.p.y < this.p.w /2) {
           this.p.speed = -this.p.speed;
         }
       },

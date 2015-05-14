@@ -5,18 +5,25 @@
     <script src="vendor/jquery-2.1.3.min.js"></script>
     <script src="vendor/quintus-all.js"></script>
     <script src="vendor/peer.min.js"></script>
+    <script src="vendor/signals.js"></script>
+    <script src="vendor/logger.min.js"></script>
     
     <script src="util.js"></script>
     <script src="api.js"></script>
     <script src="comms.js"></script>
+    <script src="manager.js"></script>
 
     <script>
+      Logger.useDefaults();
+
       Game = {
-        manager: new Manager({ host: 'localhost', port: 9000 }),
+        manager: new Manager(),
         scene: {},
         sprite: {},
         component: {}
       };
+
+      $(window).unload(function () { Game.manager.destroy(); });
     </script>
 
     <script src="scenes/intro.js"></script>
@@ -28,6 +35,7 @@
     <script src="sprites/shot.js"></script>
     <script src="components/gun.js"></script>
     <script src="components/basicAI.js"></script>
+    <script src="components/remoteAI.js"></script>
     <script src="game.js"></script>
   </body>
 </html>
