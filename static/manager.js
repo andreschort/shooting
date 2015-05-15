@@ -11,10 +11,12 @@ function Manager() {
   this.on.started.memorize = true;
 
   var self = this;
-  this.comm = new Comm({ host: window.location.hostname, port: 9000, connected: function (id) {
-    self.on.connected.dispatch(id);
-  } });
   this.api = new Api(window.location.origin + '/api');
+  this.comm = new Comm({
+    host: window.location.hostname,
+    port: 9000,
+    connected: self.on.connected.dispatch
+  });
 }
 
 Manager.prototype.start = function (game) {
@@ -38,39 +40,14 @@ Manager.prototype.start = function (game) {
         }
       });
 
-      var runGame = function () {
-        var me = Q('Player').first();
-        var enemy = Q('Enemy').first();
-
-        if (!me || !enemy) {
-          setTimeout(runGame, 1000);
-          return;
-        }
-
-        self.comm.on.message.add(function (player, data) {
-          enemy.p.x = data.x;
-          enemy.p.y = data.y;
-        });
-
-        var meStep = me.step;
-        me.step = function (dt) {
-          meStep.call(me, dt);
-
-          self.comm.broadcast({x: me.p.x, y: me.p.y });
-        }
-      };
-
       if (self.comm.playerCount() > 0) {
         self.on.started.dispatch();
-        runGame();
       } else {
         self.comm.on.newPlayer.add(function (player) {
           Logger.debug('Manager: comm.onNewPlayer');
 
-          self.on.newPlayer.dispatch(player);
-          runGame();
-          Logger.debug('Manager: runGame');
           self.on.started.dispatch();
+          self.on.newPlayer.dispatch(player);
         });
       }
     });

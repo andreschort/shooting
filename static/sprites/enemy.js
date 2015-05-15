@@ -4,7 +4,7 @@
       this._super(p, {
         sprite: "player",
         sheet: "player",
-        x: Q.el.width,
+        x: Q.el.width - 60, //TODO get that 60 from the sprite's width
         y: Q.el.height / 2,
         angle: 180,
         type: Q.SPRITE_ENEMY,
@@ -12,6 +12,7 @@
       });
 
       this.add("animation");
+      this.add("RemoteAI");
       this.play("default");
       this.add("Gun");
 

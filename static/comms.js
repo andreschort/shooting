@@ -64,13 +64,20 @@ function Comm(options) {
 // start a connection to a remote peer
 Comm.prototype.connect = function (id) {
   Logger.debug('Comm: connect %s', id);
-  this.players[id] = new Player(this.peer.connect(id));
-  return this.players[id];
+  var player = new Player(this.peer.connect(id));
+  this.players[id] = player;
+
+  var self = this;
+  player.on.message.add(function (data) {
+    self.on.message.dispatch(player, data);
+  });
+
+  return player;
 };
 
 // broadcasts a message to all players
 Comm.prototype.broadcast = function (data) {
-  Logger.debug('Comm: broadcast');
+  //Logger.debug('Comm: broadcast %s', data);
   var self = this;
   Object.keys(this.players).forEach(function (peerId) {
     self.players[peerId].send(data);
@@ -94,28 +101,29 @@ Comm.prototype.destroy = function () {
 // Represents a remote player, handles incoming messages from that player
 function Player(conn) {
   this.conn = conn;
-  this.events = {};
+  this.on = {
+    connected: new signals.Signal(),
+    disconnected: new signals.Signal(),
+    message: new signals.Signal()
+  };
 
   var self = this;
   var handle = {
     data: function (data) {
-      // data received;
-      Util.callIfPossible(self.events["message"], this, data);
-
-      if (data.type) {
-        Util.callIfPossible(self.events["message." + data.type], this, data);
-      }
+      self.on.message.dispatch(data);
     },
     open: function () {
       // data connection ready
+      self.on.connected.dispatch(self);
     },
     close: function () {
       // data connection closed
-      console.log('player disconnected');
+      Logger.info('player %s disconnected', self.conn.peer);
+      self.on.disconnected.dispatch(self);
     },
     error: function (err) {
       // something went wrong
-      console.log(err);
+      Logger.error(err);
     }
   };
 
@@ -135,12 +143,4 @@ Player.prototype.send = function (data) {
 
 Player.prototype.close = function () {
   this.conn.close();
-};
-
-Player.prototype.on = function (evnt, cb) {
-  if (!this.events[evnt]) {
-    this.events[evnt] = [];
-  }
-
-  this.events[evnt].push(cb);
 };
