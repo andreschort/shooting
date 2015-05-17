@@ -10,12 +10,11 @@ function Manager() {
   this.on.disconnected.memorize = true;
   this.on.started.memorize = true;
 
-  var self = this;
   this.api = new Api(window.location.origin + '/api');
   this.comm = new Comm({
     host: window.location.hostname,
     port: 9000,
-    connected: self.on.connected.dispatch
+    connected: this.on.connected.dispatch
   });
 }
 

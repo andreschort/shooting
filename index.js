@@ -1,11 +1,13 @@
-// SETUP PEER SERVER
 var _ = require('underscore');
-var PeerServer = require('peer').PeerServer;
-var server = new PeerServer({port: 9000, path: '/shooting'});
 var util = require('util');
 var r = require('./rooms.js');
 
 var rooms = new r.RoomCollection();
+
+
+// SETUP PEER SERVER
+var PeerServer = require('peer').PeerServer;
+var server = new PeerServer({port: 9000, path: '/shooting'});
 
 server.on('connection', function (id) {
   console.log('connected: ' + id);
