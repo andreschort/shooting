@@ -1,2 +1,2 @@
 # shooting
-Multiplayer shooting game using Quintus and PeerJS
+Javascript multiplayer shooting game using Node, Quintus and PeerJS
