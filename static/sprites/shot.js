@@ -1,5 +1,5 @@
-(function () {
-  Game.sprite["Shot"] = {
+(function (game) {
+  game.sprites["Shot"] = {
     init: function (p) {
       this._super(p, {
         sprite: "shot",
@@ -15,9 +15,9 @@
     step: function (dt) {
       this.p.x += this.p.speed * dt;
 
-      if (this.p.x > Q.el.width || this.p.x < 0) {
+      if (this.p.x > game.Q.el.width || this.p.x < 0) {
         this.destroy();
       }
     }
   };
-})();
+})(G);

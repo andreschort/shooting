@@ -1,5 +1,5 @@
-(function () {
-  Game.component["BasicAI"] = {
+(function (game) {
+  game.components["BasicAI"] = {
     added: function () {
       this.entity.changeDirections();
       this.entity.on('step', 'move');
@@ -23,7 +23,7 @@
         }
         
         // go the other way if we are at the limit of the screen.
-        if (this.p.y > Q.el.height - this.p.h / 2 || this.p.y < this.p.w /2) {
+        if (this.p.y > game.Q.el.height - this.p.h / 2 || this.p.y < this.p.w /2) {
           this.p.speed = -this.p.speed;
         }
       },
@@ -35,9 +35,9 @@
           return;
 
         if (player.p.y + player.p.h > this.p.y && player.p.y - player.p.h < this.p.y) {
-          this.fire(Q.SPRITE_ENEMY);
+          this.fire(game.Q.SPRITE_ENEMY);
         }
       }
     }
   };
-})();
+})(G);

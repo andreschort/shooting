@@ -1,43 +1,42 @@
-(function () {
-  Game.scene['intro'] = function (stage) {
-    var container = stage.insert(new Q.UI.Container({
-      x: Q.width / 2,
-      y: Q.height / 2,
+(function (game) {
+  game.scenes['intro'] = function (stage) {
+    var container = stage.insert(new game.Q.UI.Container({
+      x: game.Q.width / 2,
+      y: game.Q.height / 2,
       fill: "#FFFFFF"
     }));
 
-    var button = container.insert(new Q.UI.Button({
+    var createGameButton = container.insert(new game.Q.UI.Button({
       x: 0,
       y: 0,
       fill: "#CCCCCC",
-      label: "Play",
+      label: "Create game",
       hidden: true
     }));
 
-    var text = container.insert(new Q.UI.Text({
+    var text = container.insert(new game.Q.UI.Text({
       x: 10,
-      y: -10 - button.p.h,
+      y: -10 - createGameButton.p.h,
       label: "Server: Connecting..."
     }));
 
-    Game.manager.on.connected.addOnce(function () {
+    game.manager.on.connected.addOnce(function () {
       Logger.debug('UI: Intro - Manager.onConnected');
       text.p.label = "Server: Ready\nWaiting enemy";
+      createGameButton.p.hidden = false;
     });
 
-    Game.manager.on.started.addOnce(function () {
+    game.manager.on.started.addOnce(function () {
       Logger.debug('UI: Intro - Manager.onStarted');
-      Q.clearStages();
-      Q.stageScene("mainLevel");
+      game.Q.clearStages();
+      game.Q.stageScene("mainLevel");
     });
 
-    Game.manager.start('test game');
-
-    button.on('click', function () {
-      Q.clearStages();
-      Q.stageScene("mainLevel");
+    createGameButton.on('click', function () {
+      game.Q.clearStages();
+      game.Q.stageScene("createGame");
     });
 
     container.fit(20);
   };
-})();
+})(G);

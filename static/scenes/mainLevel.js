@@ -1,15 +1,15 @@
-(function () {
-  Game.scene["mainLevel"] = function (stage) {
-    Q.gravity = 0;
-    Q.endGame = false;
-    stage.insert(new Q.Sprite({
+(function (game) {
+  game.scenes["mainLevel"] = function (stage) {
+    game.Q.gravity = 0;
+    game.Q.endGame = false;
+    stage.insert(new game.Q.Sprite({
         asset: "space_background.jpg",
-        x: Q.el.width / 2,
-        y: Q.el.height / 2,
-        type: Q.SPRITE_NONE
+        x: game.Q.el.width / 2,
+        y: game.Q.el.height / 2,
+        type: game.Q.SPRITE_NONE
       }));
 
-    stage.insert(new Q.Player());
-    stage.insert(new Q.Enemy());
+    stage.insert(new game.Q.Player());
+    stage.insert(new game.Q.Enemy());
   }
-})();
+})(G);

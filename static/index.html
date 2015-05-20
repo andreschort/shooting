@@ -7,23 +7,17 @@
     <script src="vendor/peer.min.js"></script>
     <script src="vendor/signals.min.js"></script>
     <script src="vendor/logger.min.js"></script>
-    
+
     <script src="util.js"></script>
     <script src="api.js"></script>
     <script src="comms.js"></script>
     <script src="manager.js"></script>
+    <script src="game.js"></script>
 
     <script>
       Logger.useDefaults();
 
-      Game = {
-        manager: new Manager(),
-        scene: {},
-        sprite: {},
-        component: {}
-      };
-
-      $(window).unload(function () { Game.manager.destroy(); });
+      G = new Game();
     </script>
 
     <script src="scenes/intro.js"></script>
@@ -37,6 +31,7 @@
     <script src="components/basicAI.js"></script>
     <script src="components/remoteAI.js"></script>
     <script src="components/broadcaster.js"></script>
-    <script src="game.js"></script>
+
+    <script>G.load();</script>
   </body>
 </html>

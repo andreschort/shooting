@@ -1,39 +1,54 @@
-var Q = Quintus()
-  .include("Sprites, Anim, Input, Touch, Scenes, UI")
-  .setup({ width: 800, height: 480 })
-  .touch();
+function Game() {
+  this.manager = new Manager();
+  this.scenes = {};
+  this.sprites = {};
+  this.components = {};
 
-Q.input.touchControls({
-  controls: [
-    ['left', '<'],
-    ['right', '>'],
-    [],
-    [],
-    [],
-    [],
-    ['fire', 'a']
-  ]
-});
+  var self = this;
+  $(window).unload(function () { self.manager.destroy(); });
+}
 
-Q.controls();
+Game.prototype.load = function () {
+  Logger.debug('Game: Loading...');
+  var Q = this.Q = Quintus()
+      .include("Sprites, Anim, Input, Touch, Scenes, UI")
+      .setup({ width: 800, height: 480 })
+      .touch();
 
-Q.Sprite.extend("Player", Game.sprite["Player"]);
-Q.Sprite.extend("Enemy", Game.sprite["Enemy"]);
-Q.Sprite.extend("Shot", Game.sprite["Shot"]);
+  Q.input.touchControls({
+    controls: [
+      ['left', '<'],
+      ['right', '>'],
+      [],
+      [],
+      [],
+      [],
+      ['fire', 'a']
+    ]
+  });
 
-Q.component("BasicAI", Game.component["BasicAI"]);
-Q.component("RemoteAI", Game.component["RemoteAI"]);
-Q.component("Gun", Game.component["Gun"]);
-Q.component("Broadcaster", Game.component["Broadcaster"]);
+  Q.controls();
 
-Q.scene("intro", Game.scene["intro"]);
-Q.scene("mainLevel", Game.scene["mainLevel"]);
-Q.scene("endGame", Game.scene["endGame"]);
+  for(var name in this.sprites) {
+    Logger.debug('Game: Loaded sprite %s', name);
+    Q.Sprite.extend(name, this.sprites[name]);
+  }
+  for(var name in this.components) {
+    Logger.debug('Game: Loaded component %s', name);
+    Q.component(name, this.components[name]);
+  }
+  for(var name in this.scenes) {
+    Logger.debug('Game: Loaded scene %s', name);
+    Q.scene(name, this.scenes[name]);
+  }
 
-Q.load(["space_background.jpg", "spaceship.png", "shot4.jpg", "player.json", "shot.json"], function () {
-  Q.compileSheets("spaceship.png", "player.json");
-  Q.compileSheets("shot4.jpg", "shot.json");
-  Q.animations("player", { default: { frames: [0, 1, 2, 3], rate: 1/4 } });
-  Q.animations("shot", { default: { frames: [0, 1, 2, 3], rate: 1/4 } });
-  Q.stageScene("intro");
-});
+  Q.load(["space_background.jpg", "spaceship.png", "shot4.jpg", "player.json", "shot.json"], function () {
+    Q.compileSheets("spaceship.png", "player.json");
+    Q.compileSheets("shot4.jpg", "shot.json");
+    Q.animations("player", { default: { frames: [0, 1, 2, 3], rate: 1/4 } });
+    Q.animations("shot", { default: { frames: [0, 1, 2, 3], rate: 1/4 } });
+    Q.stageScene("intro");
+  });
+
+  this.manager.start('test game');
+};
